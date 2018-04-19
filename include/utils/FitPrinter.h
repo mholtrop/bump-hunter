@@ -12,6 +12,8 @@
 //   ROOT   //
 //----------//
 #include <TCanvas.h>
+#include <TH1.h>
+#include <TF1.h>
 #include <TAxis.h>
 #include <TColor.h>
 
@@ -35,8 +37,7 @@ class FitPrinter {
         ~FitPrinter();
 
         /** Print the resulting fit and save it to the specified output path. */
-        void print(RooRealVar* var, RooDataHist* data, RooAddPdf* model, 
-                   std::string range, std::string output_path); 
+        void print(TH1* histogram, double window_start, double window_end, std::string output_path); 
 
     private:
         
@@ -44,10 +45,10 @@ class FitPrinter {
         TCanvas* _canvas{new TCanvas{"canvas", "canvas", 900, 800}};
         
         /** Pad used to draw fit. */
-        TPad* _main_pad{new TPad{"main_pad", "main_pad", 0.0, 0.2, 1.0, 1.0}}; 
+        //TPad* _main_pad{new TPad{"main_pad", "main_pad", 0.0, 0.2, 1.0, 1.0}}; 
         
         /** Pad used to draw residuals. */
-        TPad* _res_pad{new TPad{"main_pad", "main_pad", 0.0, 0.0, 1.0, 0.2}}; 
+        //TPad* _res_pad{new TPad{"main_pad", "main_pad", 0.0, 0.0, 1.0, 0.2}}; 
 
 };  // FitPrinter
 

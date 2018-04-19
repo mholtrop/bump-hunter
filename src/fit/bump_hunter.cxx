@@ -229,20 +229,20 @@ int main(int argc, char **argv) {
     HpsFitResult* result = bump_hunter->performSearch(histogram, mass_hypothesis, false); 
 
     // Retrieve all of the result of interest. 
-    double bkg_yield     = static_cast<RooRealVar*>(result->getRooFitResult()->floatParsFinal().find("bkg yield"))->getVal();
+    /*double bkg_yield     = static_cast<RooRealVar*>(result->getRooFitResult()->floatParsFinal().find("bkg yield"))->getVal();
     double bkg_yield_err = static_cast<RooRealVar*>(result->getRooFitResult()->floatParsFinal().find("bkg yield"))->getError();
     double sig_yield     = static_cast<RooRealVar*>(result->getRooFitResult()->floatParsFinal().find("signal yield"))->getVal();
-    double sig_yield_err = static_cast<RooRealVar*>(result->getRooFitResult()->floatParsFinal().find("signal yield"))->getError();
+    double sig_yield_err = static_cast<RooRealVar*>(result->getRooFitResult()->floatParsFinal().find("signal yield"))->getError(); 
     double nll = result->getRooFitResult()->minNll();
     double invalid_nll = result->getRooFitResult()->numInvalidNLL();
     double minuit_status = result->getRooFitResult()->status();
-    double edm = result->getRooFitResult()->edm(); 
+    double edm = result->getRooFitResult()->edm(); */
 
     tuple->setVariableValue("ap_mass",                result->getMass());  
     tuple->setVariableValue("corr_mass",              result->getCorrectedMass());  
     tuple->setVariableValue("bkg_total",              result->getBkgTotal()); 
     tuple->setVariableValue("bkg_window_size",        result->getBkgWindowSize()); 
-    tuple->setVariableValue("bkg_yield",              bkg_yield);  
+    /*tuple->setVariableValue("bkg_yield",              bkg_yield);  
     tuple->setVariableValue("bkg_yield_err",          bkg_yield_err);
     tuple->setVariableValue("edm",                    edm); 
     tuple->setVariableValue("invalid_nll",            invalid_nll); 
@@ -258,7 +258,7 @@ int main(int argc, char **argv) {
     tuple->setVariableValue("window_size",            result->getWindowSize());  
     tuple->setVariableValue("upper_limit",            result->getUpperLimit());
     tuple->setVariableValue("upper_limit_p_value",    result->getUpperLimitPValue()); 
-    tuple->setVariableValue("upper_limit_fit_status", result->getUpperLimitFitStatus()); 
+    tuple->setVariableValue("upper_limit_fit_status", result->getUpperLimitFitStatus()); */
 
     for (auto& likelihood : result->getLikelihoods()) { 
         tuple->addToVector("nlls", likelihood); 
@@ -279,7 +279,8 @@ int main(int argc, char **argv) {
         }
     }
 
-
+    
+    /*
     for (auto& toy_result : toy_results) { 
         
         // Retrieve all of the result of interest. 
@@ -293,7 +294,7 @@ int main(int argc, char **argv) {
         tuple->addToVector("toy_nll", toy_result->getRooFitResult()->minNll());
         tuple->addToVector("toy_q0",  toy_result->getQ0()); 
          
-    }
+    }*/
 
     // Fill the ntuple
     tuple->fill();

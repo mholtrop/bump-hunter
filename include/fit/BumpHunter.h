@@ -23,7 +23,10 @@
 
 //----------//
 //   ROOT   //
-//----------//   
+//----------// 
+#include <TF1.h> 
+#include <TFitResult.h>
+#include <TFitResultPtr.h>
 #include <TH1.h>
 #include <TMath.h>
 #include <TCanvas.h>
@@ -99,7 +102,7 @@ class BumpHunter {
          * @param range_name The range to fit.
          
          */        
-        HpsFitResult* fit(RooDataHist* data, std::string range_name); 
+        //HpsFitResult* fit(RooDataHist* data, std::string range_name); 
    
         /**
          *
@@ -123,19 +126,13 @@ class BumpHunter {
         void writeResults(bool write_results = true) { _write_results = write_results; }; 
 
         /** Get the signal upper limit. */
-        void getUpperLimit(RooDataHist* data, std::string range_name, HpsFitResult* result); 
-
-        /** Reset the fit parameters to their initial values. */ 
-        void resetParameters(); 
-        
-        /** Reset the fit parameters to their initial values. */ 
-        void resetParameters(HpsFitResult* result); 
+        void getUpperLimit(TH1* histogram, HpsFitResult* result); 
 
         /** */
         //std::vector<HpsFitResult*> generateToys(double n_toys);
         std::vector<TH1*> generateToys(TH1* histogram, double n_toys);
 
-    private: 
+    private:
 
         /**
          * Get the HPS mass resolution at the given mass.  The functional form 
@@ -168,8 +165,6 @@ class BumpHunter {
          */
         void getChi2Prob(double min_nll_null, double min_nll, double &q0, double &p_value); 
 
-
-        double getFitChi2(RooDataHist* data); 
 
         /**
          *
@@ -241,7 +236,7 @@ class BumpHunter {
         double _res_factor{13}; 
 
         /** Size of the background window that will be used to fit. */
-        double _window_size{0};
+        double window_size_{0};
 
         /** The total number of bins */
         int bins_{0};
@@ -265,7 +260,41 @@ class BumpHunter {
 
         double window_end_{0};
 
-        double mass_hypothesis_{0};  
+        double mass_hypothesis_{0}; 
+
+        double mass_resolution_{0};  
+};
+
+class BkgFunction { 
+    
+    public: 
+
+        /** Constructor */
+        BkgFunction(double mass_hypothesis, double window_size); 
+
+        double operator() (double* x, double* par); 
+
+    private: 
+
+        double mass_hypothesis_{0}; 
+
+        double window_size_{0}; 
+};
+
+class FullFunction { 
+    
+    public: 
+
+        /** Constructor */
+        FullFunction(double mass_hypothesis, double window_size); 
+
+        double operator() (double* x, double* par); 
+
+    private: 
+
+        double mass_hypothesis_{0}; 
+
+        double window_size_{0}; 
 };
 
 #endif // __BUMP_HUNTER_H__

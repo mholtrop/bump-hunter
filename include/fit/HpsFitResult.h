@@ -7,6 +7,8 @@
 #ifndef __HPS_FIT_RESULT_H__
 #define __HPS_FIT_RESULT_H__
 
+#include <TFitResultPtr.h>
+
 //------------//
 //   RooFit   //
 //------------//
@@ -21,10 +23,14 @@ class HpsFitResult {
         HpsFitResult(); 
 
         /** */
-        HpsFitResult(RooFitResult* result, double q0 = 0, double p_value = 0, double upper_limit = 0);
+        HpsFitResult(TFitResultPtr* result, double q0 = 0, double p_value = 0, double upper_limit = 0);
 
         ~HpsFitResult(); 
-       
+      
+        TFitResultPtr getBkgFitResult() { return bkg_result_; }; 
+        
+        TFitResultPtr getCompFitResult() { return comp_result_; }; 
+
         void addLikelihood(double likelihood) { _likelihoods.push_back(likelihood); }
 
         void addSignalYield(double signal_yield) { _signal_yields.push_back(signal_yield); }
@@ -50,7 +56,7 @@ class HpsFitResult {
         double getParameterVal(std::string parameter_name); 
 
         /** */
-        RooFitResult* getRooFitResult() { return result; };  
+        //RooFitResult* getRooFitResult() { return result; };  
 
         double getBkgTotal() {return this->bkg_total; };
 
@@ -89,8 +95,20 @@ class HpsFitResult {
         /** */
         void setPValue(double p_value) { this->p_value = p_value; };  
         
-        /** */
-        void setRooFitResult(RooFitResult* result) { this->result = result; }; 
+        /** 
+         * Set the result from the background only fit.
+         *
+         * @param result Result from the background only fit.
+         */
+        void setBkgFitResult(TFitResultPtr bkg_result) { bkg_result_ = bkg_result; };
+
+
+        /** 
+         * Set the result from the signal+background only fit.
+         *
+         * @param result Result from the signal+background only fit.
+         */
+        void setCompFitResult(TFitResultPtr comp_result) { comp_result_ = comp_result; };
 
         /** 
          * Set mass hypothesis used for this fit. 
@@ -129,8 +147,11 @@ class HpsFitResult {
 
     private: 
 
-        /** Result associated with RooFit. */
-        RooFitResult* result; 
+        /** Result from fit using a background model only. */
+        TFitResultPtr bkg_result_{nullptr}; 
+
+        /** Result from fit using a signal+background model. */
+        TFitResultPtr comp_result_{nullptr}; 
 
         std::vector<double> _likelihoods; 
 
