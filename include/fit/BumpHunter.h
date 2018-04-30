@@ -33,24 +33,6 @@
 #include <TFile.h>
 #include <Math/ProbFunc.h>
 
-//------------//
-//   RooFit   //
-//------------//
-#include <RooAddPdf.h>
-#include <RooArgList.h>
-#include <RooDataHist.h>
-#include <RooExponential.h>
-#include <RooFitResult.h>
-#include <RooGaussian.h>
-#include <RooChebychev.h>
-#include <RooMinuit.h>
-#include <RooPlot.h>
-#include <RooProfileLL.h>
-#include <RooProdPdf.h>
-#include <RooRandom.h>
-#include <RooRealVar.h>
-
-
 //---//
 #include <HpsFitResult.h>
 #include <FitPrinter.h>
@@ -94,17 +76,6 @@ class BumpHunter {
         void initialize(TH1* histogram, double &mass_hypothesis); 
 
         /**
-         * Fit the given histogram. If a range is specified, only fit within the 
-         * range of interest.
-         *
-         * @param data The RooFit histogram to fit.
-         * @param migrad_only If true, only run migrad.
-         * @param range_name The range to fit.
-         
-         */        
-        //HpsFitResult* fit(RooDataHist* data, std::string range_name); 
-   
-        /**
          *
          */
         void calculatePValue(HpsFitResult* result); 
@@ -129,7 +100,6 @@ class BumpHunter {
         void getUpperLimit(TH1* histogram, HpsFitResult* result); 
 
         /** */
-        //std::vector<HpsFitResult*> generateToys(double n_toys);
         std::vector<TH1*> generateToys(TH1* histogram, double n_toys);
 
     private:
@@ -171,69 +141,33 @@ class BumpHunter {
          */
         FitPrinter* printer{new FitPrinter()}; 
 
-        /** A mapping between a variable name and its corresponding RooRealVar. */
-        std::map <std::string, RooRealVar*> variable_map;
-
-        std::map <std::string, double> default_values; 
-        
-        std::map <std::string, double> default_errors; 
-
         /** Background only fit result. */
         HpsFitResult* bkg_only_result_{nullptr};
-
-        /** Signal + bkg model */
-        RooAddPdf* comp_model;  
-
-        /** Bkg only model */
-        RooAddPdf* bkg_model;
-
-        /** */
-        RooAddPdf* _model; 
-
-        /** Signal PDF */ 
-        RooGaussian* signal;
-
-        /** Bkg PDF */
-        RooAbsPdf* bkg;
-
-        /** */ 
-        RooArgList arg_list;
-    
-        /** Mass variable. */
-        RooRealVar* mass_{nullptr};
-
-        RooDataHist* data_{nullptr};
 
         /** Output file stream */
         std::ofstream* ofs;
 
-        /** Name of the range used by the fit. */
-        std::string range_name_{""}; 
+        //
+        // Variable definitions
+        //
 
-        /** 
-         * Size of the background window used to calculate the amount of 
-         * bkg/mev.
-         */
-        double _bkg_window_size{-9999};
-
-        /** Total number of events withing the background window. */
-        double _bkg_window_integral{-9999}; 
+        /** The mass after the mass scale correction. */
+        double corr_mass_{0};
 
         /** The lower bound of the histogram. */
-        //double _lower_bound{-9999};
-        double _lower_bound{0.016};
+        double lower_bound{0.016};
 
         /** The upper bound of the histogram. */
-        //double _upper_bound{-9999};
-        double _upper_bound{0.115};
+        double upper_bound_{0.115};
 
+        /** The total number of events within the fit window. */
         double integral_{0}; 
 
         /** 
          * Resolution multiplicative factor used in determining the fit window 
          * size.
          */
-        double _res_factor{13}; 
+        double res_factor_{13}; 
 
         /** Size of the background window that will be used to fit. */
         double window_size_{0};
@@ -242,7 +176,7 @@ class BumpHunter {
         int bins_{0};
 
         /** Polynomial order used to model the background. */
-        int _poly_order;
+        int poly_order_{0};
 
         /** 
          * Flag denoting if application should run in batch mode.  If set to 

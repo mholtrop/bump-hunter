@@ -192,74 +192,99 @@ int main(int argc, char **argv) {
     // Create a new flat ntuple and define the variables it will contain.
     FlatTupleMaker* tuple = new FlatTupleMaker(output_file, "results"); 
 
-    tuple->addVariable("ap_mass");
-    tuple->addVariable("corr_mass");
+    //
+    // Fit Parameters
+    //
+
     tuple->addVariable("bkg_total"); 
-    tuple->addVariable("bkg_window_size");  
-    tuple->addVariable("bkg_yield"); 
-    tuple->addVariable("bkg_yield_err");  
-    tuple->addVariable("edm");
-    tuple->addVariable("invalid_nll"); 
-    tuple->addVariable("minuit_status"); 
-    tuple->addVariable("nll");
-    tuple->addVariable("p_value");
+    tuple->addVariable("corr_mass");
+    tuple->addVariable("mass_hypo");
     tuple->addVariable("poly_order"); 
-    tuple->addVariable("q0");
-    tuple->addVariable("scan_id");
     tuple->addVariable("win_factor"); 
+    tuple->addVariable("window_size"); 
+    
+    //
+    // Background Fit Variables
+    //
+
+    tuple->addVariable("bkg_chi2_prob");
+    tuple->addVariable("bkg_edm");
+    tuple->addVariable("bkg_minuit_status"); 
+    tuple->addVariable("bkg_nll");
+   
+    //
+    // Sig+Bkg Fit Variables
+    //
+    tuple->addVariable("edm");
+    tuple->addVariable("minuit_status"); 
+    tuple->addVariable("nll"); 
+    tuple->addVariable("p_value");
+    tuple->addVariable("q0");
     tuple->addVariable("sig_yield");  
     tuple->addVariable("sig_yield_err"); 
-    tuple->addVariable("window_size"); 
     tuple->addVariable("upper_limit");
-    tuple->addVariable("upper_limit_p_value"); 
-    tuple->addVariable("upper_limit_fit_status"); 
-    tuple->addVector("nlls"); 
-    tuple->addVector("sig_yields"); 
-    tuple->addVector("toy_bkg_yield"); 
-    tuple->addVector("toy_bkg_yield_err"); 
-    tuple->addVector("toy_sig_yield"); 
-    tuple->addVector("toy_sig_yield_err");
-    tuple->addVector("toy_q0"); 
+    tuple->addVariable("ul_p_value"); 
+    tuple->addVariable("ul_minuit_status"); 
+    tuple->addVector("ul_nlls"); 
+    tuple->addVector("ul_sig_yields"); 
+
+    //
+    // Toy variables
+    //
+
+    tuple->addVector("toy_bkg_chi2_prob");
+    tuple->addVector("toy_bkg_edm");
+    tuple->addVector("toy_bkg_minuit_status"); 
+    tuple->addVector("toy_bkg_nll");
     tuple->addVector("toy_minuit_status");
     tuple->addVector("toy_nll"); 
     tuple->addVector("toy_p_value"); 
+    tuple->addVector("toy_q0"); 
+    tuple->addVector("toy_sig_yield"); 
+    tuple->addVector("toy_sig_yield_err");
     tuple->addVector("toy_upper_limit"); 
 
     // Search for a resonance at the given mass hypothesis
-    HpsFitResult* result = bump_hunter->performSearch(histogram, mass_hypothesis, false); 
+    HpsFitResult* result = bump_hunter->performSearch(histogram, mass_hypothesis, false);
+
+    // Get the result of the background fit
+    TFitResultPtr bkg_result = result->getBkgFitResult();  
+
+    // Get the result of the signal+background fit
+    TFitResultPtr sig_result = result->getCompFitResult();  
 
     // Retrieve all of the result of interest. 
-    /*double bkg_yield     = static_cast<RooRealVar*>(result->getRooFitResult()->floatParsFinal().find("bkg yield"))->getVal();
-    double bkg_yield_err = static_cast<RooRealVar*>(result->getRooFitResult()->floatParsFinal().find("bkg yield"))->getError();
-    double sig_yield     = static_cast<RooRealVar*>(result->getRooFitResult()->floatParsFinal().find("signal yield"))->getVal();
-    double sig_yield_err = static_cast<RooRealVar*>(result->getRooFitResult()->floatParsFinal().find("signal yield"))->getError(); 
-    double nll = result->getRooFitResult()->minNll();
-    double invalid_nll = result->getRooFitResult()->numInvalidNLL();
-    double minuit_status = result->getRooFitResult()->status();
-    double edm = result->getRooFitResult()->edm(); */
+    
+    //
+    // Set the fit parameters
+    //
 
-    tuple->setVariableValue("ap_mass",                result->getMass());  
+    tuple->setVariableValue("bkg_total",              result->getIntegral()); 
     tuple->setVariableValue("corr_mass",              result->getCorrectedMass());  
-    tuple->setVariableValue("bkg_total",              result->getBkgTotal()); 
-    tuple->setVariableValue("bkg_window_size",        result->getBkgWindowSize()); 
-    /*tuple->setVariableValue("bkg_yield",              bkg_yield);  
-    tuple->setVariableValue("bkg_yield_err",          bkg_yield_err);
-    tuple->setVariableValue("edm",                    edm); 
-    tuple->setVariableValue("invalid_nll",            invalid_nll); 
-    tuple->setVariableValue("minuit_status",          minuit_status);
-    tuple->setVariableValue("nll",                    nll); 
-    tuple->setVariableValue("p_value",                result->getPValue());
+    tuple->setVariableValue("mass_hypo",              result->getMass());  
     tuple->setVariableValue("poly_order",             poly_order);
-    tuple->setVariableValue("q0",                     result->getQ0()); 
-    tuple->setVariableValue("sig_yield",              sig_yield);
-    tuple->setVariableValue("scan_id",                scan); 
     tuple->setVariableValue("win_factor",             win_factor);  
-    tuple->setVariableValue("sig_yield_err",          sig_yield_err);
     tuple->setVariableValue("window_size",            result->getWindowSize());  
+    
+    //
+    // Background Fit Results
+    //
+
+    tuple->setVariableValue("bkg_chi_prob",           bkg_result->Prob()); 
+    tuple->setVariableValue("bkg_edm",                bkg_result->Edm());
+    tuple->setVariableValue("bkg_minuit_status",      bkg_result->Status());
+    tuple->setVariableValue("bkg_nll",                bkg_result->MinFcnValue());
+     
+    tuple->setVariableValue("edm",                    sig_result->Edm()); 
+    tuple->setVariableValue("minuit_status",          sig_result->Status());
+    tuple->setVariableValue("nll",                    sig_result->MinFcnValue()); 
+    tuple->setVariableValue("p_value",                result->getPValue());
+    tuple->setVariableValue("q0",                     result->getQ0()); 
+    tuple->setVariableValue("sig_yield",              result->getSignalYield());
+    tuple->setVariableValue("sig_yield_err",          result->getSignalYieldErr());
     tuple->setVariableValue("upper_limit",            result->getUpperLimit());
     tuple->setVariableValue("upper_limit_p_value",    result->getUpperLimitPValue()); 
-    tuple->setVariableValue("upper_limit_fit_status", result->getUpperLimitFitStatus()); */
-
+    
     for (auto& likelihood : result->getLikelihoods()) { 
         tuple->addToVector("nlls", likelihood); 
     } 
@@ -275,26 +300,33 @@ int main(int argc, char **argv) {
         std::vector<TH1*> toys_hist = bump_hunter->generateToys(histogram, toys);
         
         for (TH1* hist : toys_hist) { 
-            toy_results.push_back(bump_hunter->performSearch(hist, mass_hypothesis, true)); 
+            toy_results.push_back(bump_hunter->performSearch(hist, mass_hypothesis, false)); 
         }
     }
 
     
-    /*
     for (auto& toy_result : toy_results) { 
-        
+      
+        // Get the result of the background fit
+        TFitResultPtr toy_bkg_result = toy_result->getBkgFitResult();  
+
+        tuple->addToVector("toy_bkg_chi2_prob",     toy_bkg_result->Prob());
+        tuple->addToVector("toy_bkg_edm",           toy_bkg_result->Edm());
+        tuple->addToVector("toy_bkg_minuit_status", toy_bkg_result->Status()); 
+        tuple->addToVector("toy_bkg_nll",           toy_bkg_result->MinFcnValue());
+
+        // Get the result of the signal+background fit
+        TFitResultPtr toy_sig_result = toy_result->getCompFitResult();  
+
         // Retrieve all of the result of interest. 
-        tuple->addToVector("toy_bkg_yield",     static_cast<RooRealVar*>(toy_result->getRooFitResult()->floatParsFinal().find("bkg yield"))->getVal());
-        tuple->addToVector("toy_bkg_yield_err", static_cast<RooRealVar*>(toy_result->getRooFitResult()->floatParsFinal().find("bkg yield"))->getError());
-        tuple->addToVector("toy_sig_yield",     static_cast<RooRealVar*>(toy_result->getRooFitResult()->floatParsFinal().find("signal yield"))->getVal());
-        tuple->addToVector("toy_sig_yield_err", static_cast<RooRealVar*>(toy_result->getRooFitResult()->floatParsFinal().find("signal yield"))->getError());
-        tuple->addToVector("toy_p_value",   toy_result->getPValue());
+        tuple->addToVector("toy_minuit_status", toy_sig_result->Status()); 
+        tuple->addToVector("toy_nll",           toy_sig_result->MinFcnValue());
+        tuple->addToVector("toy_p_value",       toy_result->getPValue());
+        tuple->addToVector("toy_q0",            toy_result->getQ0()); 
+        tuple->addToVector("toy_sig_yield",     toy_result->getSignalYield());
+        tuple->addToVector("toy_sig_yield_err", toy_result->getSignalYieldErr());
         tuple->addToVector("toy_upper_limit",   toy_result->getUpperLimit());
-        tuple->addToVector("toy_minuit_status", toy_result->getRooFitResult()->status());
-        tuple->addToVector("toy_nll", toy_result->getRooFitResult()->minNll());
-        tuple->addToVector("toy_q0",  toy_result->getQ0()); 
-         
-    }*/
+    }
 
     // Fill the ntuple
     tuple->fill();
