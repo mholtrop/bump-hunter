@@ -226,6 +226,7 @@ int main(int argc, char **argv) {
     // Toy variables
     //
 
+    tuple->addVariable("seed");
     tuple->addVector("toy_bkg_chi2_prob");
     tuple->addVector("toy_bkg_edm");
     tuple->addVector("toy_bkg_minuit_status"); 
@@ -288,6 +289,7 @@ int main(int argc, char **argv) {
     } 
 
     std::vector<HpsFitResult*> toy_results; 
+    tuple->setVariableValue("seed", seed);  
     if (toys > 0) {
 
         std::cout << "Generating " << toys << std::endl;
