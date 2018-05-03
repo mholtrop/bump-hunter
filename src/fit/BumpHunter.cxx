@@ -284,7 +284,9 @@ void BumpHunter::getUpperLimit(TH1* histogram, HpsFitResult* result) {
     }
 }
 
-std::vector<TH1*> BumpHunter::generateToys(TH1* histogram, double n_toys) { 
+std::vector<TH1*> BumpHunter::generateToys(TH1* histogram, double n_toys, int seed) { 
+
+    gRandom->SetSeed(seed); 
 
     TF1* bkg = histogram->GetFunction("bkg"); 
 

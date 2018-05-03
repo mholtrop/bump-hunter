@@ -18,7 +18,6 @@
 #include <exception>
 #include <fstream>
 #include <map>
-#include <ctime>
 #include <vector>
 
 //----------//
@@ -31,7 +30,10 @@
 #include <TMath.h>
 #include <TCanvas.h>
 #include <TFile.h>
+#include <TRandom.h>
+
 #include <Math/ProbFunc.h>
+
 
 //---//
 #include <HpsFitResult.h>
@@ -100,7 +102,7 @@ class BumpHunter {
         void getUpperLimit(TH1* histogram, HpsFitResult* result); 
 
         /** */
-        std::vector<TH1*> generateToys(TH1* histogram, double n_toys);
+        std::vector<TH1*> generateToys(TH1* histogram, double n_toys, int seed);
 
     private:
 

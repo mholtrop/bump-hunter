@@ -45,9 +45,6 @@ int main(int argc, char **argv) {
     // The path to where the results will be saved. 
     string output_file{""};
 
-    // Range to scan histogram for a resonance.
-    string range{""};
-
     // The signal hypothesis to use in the fit. 
     double mass_hypothesis = 0; 
 
@@ -58,8 +55,9 @@ int main(int argc, char **argv) {
     // Order of polynomial used to model the background. 
     int poly_order{7};
 
-    // If >=0, scan the whole histogram.  The integer can be used as an ID.
-    int scan{-9999}; 
+    // The seed used in generating random numbers.  The default of 0 causes
+    // the generator to use the system time.
+    int seed{0}; 
 
     // The number of toys to run for each fit. If toys = 0, the generation 
     // of toys will be skipped.
@@ -89,8 +87,7 @@ int main(int argc, char **argv) {
         {"name",       required_argument, 0, 'n'}, 
         {"output",     required_argument, 0, 'o'},
         {"poly",       required_argument, 0, 'p'},
-        {"range",      required_argument, 0, 'r'},  
-        {"scan",       required_argument, 0, 's'},
+        {"seed",       required_argument, 0, 's'},
         {"toys",       required_argument, 0, 't'},
         {"win_factor", required_argument, 0, 'w'},
         {0, 0, 0, 0}
@@ -132,11 +129,8 @@ int main(int argc, char **argv) {
             case 'p': 
                 poly_order = atoi(optarg);
                 break;
-            case 'r': 
-                range = optarg; 
-                break;
             case 's': 
-                scan = atoi(optarg);
+                seed = atoi(optarg);
                 break;
             case 't':
                 toys = atoi(optarg);
@@ -297,7 +291,7 @@ int main(int argc, char **argv) {
     if (toys > 0) {
 
         std::cout << "Generating " << toys << std::endl;
-        std::vector<TH1*> toys_hist = bump_hunter->generateToys(histogram, toys);
+        std::vector<TH1*> toys_hist = bump_hunter->generateToys(histogram, toys, seed);
         
         for (TH1* hist : toys_hist) { 
             toy_results.push_back(bump_hunter->performSearch(hist, mass_hypothesis, false)); 
