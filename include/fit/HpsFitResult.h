@@ -23,9 +23,6 @@ class HpsFitResult {
         /** Default constructor */
         HpsFitResult(); 
 
-        /** */
-        HpsFitResult(TFitResultPtr* result, double q0 = 0, double p_value = 0, double upper_limit = 0);
-
         ~HpsFitResult(); 
       
         TFitResultPtr getBkgFitResult() { return bkg_result_; }; 
@@ -51,10 +48,10 @@ class HpsFitResult {
         double getPValue() { return p_value; };
 
         /** @return The signal yield obstained from the sig+bkg fit. */
-        float getSignalYield() { return comp_result_->Parameter(6);  };
+        float getSignalYield() { return comp_result_->Parameter(poly_order_ + 1);  };
          
         /** @return The error on the signal yield. */
-        float getSignalYieldErr() { return comp_result_->ParError(6); }; 
+        float getSignalYieldErr() { return comp_result_->ParError(poly_order_ + 1); }; 
 
         /** */
         double getUpperLimit() { return upper_limit; };
@@ -108,6 +105,13 @@ class HpsFitResult {
          */
         void setCorrectedMass(double cmass) { _cmass = cmass; }; 
 
+        /** 
+         * Set the order polynomial used by the fitter.
+         *
+         * @param poly_order Polynomial order used by the fitter.
+         */
+        void setPolyOrder(int poly_order) { poly_order_ = poly_order; };
+
         /**
          * Set the 2 sigma upper limit.
          *
@@ -150,6 +154,9 @@ class HpsFitResult {
         
         /** p-value. */
         double p_value;
+
+        /** Order polynomial used by the fitter. */
+        double poly_order_{0}; 
 
         /** 2 sigma upper limit on the signal. */
         double upper_limit; 
