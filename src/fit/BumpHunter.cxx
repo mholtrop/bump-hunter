@@ -102,6 +102,7 @@ HpsFitResult* BumpHunter::performSearch(TH1* histogram, double mass_hypothesis, 
 
     // Instantiate a new fit result object to store all of the results.
     HpsFitResult* fit_result = new HpsFitResult(); 
+    fit_result->setPolyOrder(poly_order_); 
 
     // If not fitting toys, start by performing a background only fit.
     if (!skip_bkg_fit)  {
@@ -115,16 +116,29 @@ HpsFitResult* BumpHunter::performSearch(TH1* histogram, double mass_hypothesis, 
         std::cout << "*************************************************" << std::endl;
    
         //
-        BkgFunction bkg_func(mass_hypothesis, window_end_ - window_start_); 
-        TF1* bkg = new TF1("bkg", bkg_func, -1, 1, 6);
+        TF1* bkg{nullptr}; 
+        if (poly_order_ == 3) { 
+            
+            //
+            ExpPol3BkgFunction bkg_func(mass_hypothesis, window_end_ - window_start_); 
+            bkg = new TF1("bkg", bkg_func, -1, 1, 4);
 
-        //
-        bkg->SetParameters(4,0,0,0,0,0);
-        bkg->SetParNames("pol0","pol1","pol2","pol3","pol4","pol5");
+            //
+            bkg->SetParameters(4,0,0,0);
+            bkg->SetParNames("pol0","pol1","pol2","pol3");
+        } else { 
+            //
+            ExpPol5BkgFunction bkg_func(mass_hypothesis, window_end_ - window_start_); 
+            bkg = new TF1("bkg", bkg_func, -1, 1, 6);
+
+            //
+            bkg->SetParameters(4,0,0,0,0,0);
+            bkg->SetParNames("pol0","pol1","pol2","pol3","pol4","pol5");
+        }
 
         TFitResultPtr result = histogram->Fit("bkg", "LES+", "", window_start_, window_end_); 
         fit_result->setBkgFitResult(result); 
-        result->Print();
+        //result->Print();
 
     }
          
@@ -133,18 +147,33 @@ HpsFitResult* BumpHunter::performSearch(TH1* histogram, double mass_hypothesis, 
     std::cout << "[ BumpHunter ]: Performing a signal+background fit." << std::endl;
     std::cout << "***************************************************" << std::endl;
     std::cout << "***************************************************" << std::endl;
-        
-    FullFunction full_func(mass_hypothesis, window_end_ - window_start_); 
-    TF1* full = new TF1("full", full_func, -1, 1, 9);
     
-    full->SetParameters(4,0,0,0,0,0,0,0,0);
-    full->SetParNames("pol0","pol1","pol2","pol3","pol4","pol5","signal norm","mean","sigma");
-    full->FixParameter(7,0.0); 
-    full->FixParameter(8, mass_resolution_); 
+    TF1* full{nullptr};  
+    if (poly_order_ == 3) { 
+        
+        ExpPol3FullFunction full_func(mass_hypothesis, window_end_ - window_start_); 
+        full = new TF1("full", full_func, -1, 1, 7);
+    
+        full->SetParameters(4,0,0,0,0,0,0);
+        full->SetParNames("pol0","pol1","pol2","pol3","signal norm","mean","sigma");
+        full->FixParameter(5,0.0); 
+        full->FixParameter(6, mass_resolution_); 
+  
+    } else { 
+  
+        ExpPol5FullFunction full_func(mass_hypothesis, window_end_ - window_start_); 
+        full = new TF1("full", full_func, -1, 1, 9);
+    
+        full->SetParameters(4,0,0,0,0,0,0,0,0);
+        full->SetParNames("pol0","pol1","pol2","pol3","pol4","pol5","signal norm","mean","sigma");
+        full->FixParameter(7,0.0); 
+        full->FixParameter(8, mass_resolution_); 
+
+    }    
        
     TFitResultPtr full_result = histogram->Fit("full", "LES+", "", window_start_, window_end_);
-    fit_result->setCompFitResult(full_result);  
-    full_result->Print();
+    fit_result->setCompFitResult(full_result); 
+    //full_result->Print();
 
     //if (!batch) { 
         //printer->print(histogram, window_start_, window_end_, "test_print.pdf");
@@ -173,7 +202,7 @@ void BumpHunter::calculatePValue(HpsFitResult* result) {
     std::cout << "[ BumpHunter ]: Calculating p-value: " << std::endl;
 
     //
-    double signal_yield = result->getCompFitResult()->Parameter(6); 
+    double signal_yield = result->getCompFitResult()->Parameter(poly_order_ + 1); 
     this->printDebug("Signal yield: " + std::to_string(signal_yield)); 
 
     // In searching for a resonance, a signal is expected to lead to an 
@@ -214,21 +243,35 @@ void BumpHunter::printDebug(std::string message) {
 }
 
 void BumpHunter::getUpperLimit(TH1* histogram, HpsFitResult* result) {
-
-    FullFunction comp_func(mass_hypothesis_, window_end_ - window_start_); 
-    TF1* comp = new TF1("comp_ul", comp_func, -1, 1, 9);   
-    comp->Print(); 
     
-    comp->SetParameters(4,0,0,0,0,0,0,0,0);
-    comp->SetParNames("pol0","pol1","pol2","pol3","pol4","pol5","signal norm","mean","sigma");
-    comp->FixParameter(7,0.0); 
-    comp->FixParameter(8, mass_resolution_); 
-    comp->Print(); 
+    TF1* comp{nullptr};
+    if (poly_order_ == 3) { 
+  
+        ExpPol3FullFunction comp_func(mass_hypothesis_, window_end_ - window_start_); 
+        comp = new TF1("comp_ul", comp_func, -1, 1, 7);
+    
+        comp->SetParameters(4,0,0,0,0,0,0);
+        comp->SetParNames("pol0","pol1","pol2","pol3","signal norm","mean","sigma");
+        comp->FixParameter(5,0.0); 
+        comp->FixParameter(6, mass_resolution_); 
+        
+    } else { 
+       
+        ExpPol5FullFunction comp_func(mass_hypothesis_, window_end_ - window_start_); 
+        comp = new TF1("comp_ul", comp_func, -1, 1, 9);
+    
+        comp->SetParameters(4,0,0,0,0,0,0,0,0);
+        comp->SetParNames("pol0","pol1","pol2","pol3","pol4","pol5","signal norm","mean","sigma");
+        comp->FixParameter(7,0.0); 
+        comp->FixParameter(8, mass_resolution_);
+   
+    }    
+
     std::cout << "Mass resolution: " << mass_resolution_ << std::endl; 
     std::cout << "[ BumpHunter ]: Calculating upper limit." << std::endl;
 
     //  Get the signal yield obtained from the signal+bkg fit
-    double signal_yield = result->getCompFitResult()->Parameter(6); 
+    double signal_yield = result->getCompFitResult()->Parameter(poly_order_ + 1); 
     this->printDebug("Signal yield: " + std::to_string(signal_yield)); 
 
     // Get the minimum NLL value that will be used for testing upper limits.
@@ -254,7 +297,7 @@ void BumpHunter::getUpperLimit(TH1* histogram, HpsFitResult* result) {
        
         this->printDebug("Setting signal yield to: " + std::to_string(signal_yield));
         std::cout << "[ BumpHunter ]: Current p-value: " << p_value << std::endl;
-        comp->FixParameter(6, signal_yield); 
+        comp->FixParameter(poly_order_ + 1, signal_yield); 
         
         TFitResultPtr full_result 
             = histogram->Fit("comp_ul", "LES+", "", window_start_, window_end_);
@@ -342,12 +385,36 @@ double BumpHunter::correctMass(double mass) {
  * BkgFunction
  */
 
-BkgFunction::BkgFunction(double mass_hypothesis, double window_size)
+//
+// TODO: Move the classes externally
+//
+
+ExpPol3BkgFunction::ExpPol3BkgFunction(double mass_hypothesis, double window_size)
     : mass_hypothesis_(mass_hypothesis), 
       window_size_(window_size) { 
 }
 
-double BkgFunction::operator() (double* x, double* par) { 
+double ExpPol3BkgFunction::operator() (double* x, double* par) { 
+    
+    double xp = (x[0] - mass_hypothesis_)/(window_size_*2.0); 
+  
+    // Chebyshevs between given limits
+    double t0 = par[0];
+    double t1 = par[1]*xp;
+    double t2 = par[2]*(2*xp*xp - 1);
+    double t3 = par[3]*(4*xp*xp*xp - 3*xp);
+  
+    double pol = t0+t1+t2+t3;
+
+    return TMath::Power(10,pol);
+}
+
+ExpPol5BkgFunction::ExpPol5BkgFunction(double mass_hypothesis, double window_size)
+    : mass_hypothesis_(mass_hypothesis), 
+      window_size_(window_size) { 
+}
+
+double ExpPol5BkgFunction::operator() (double* x, double* par) { 
     
     double xp = (x[0] - mass_hypothesis_)/(window_size_*2.0); 
   
@@ -364,13 +431,37 @@ double BkgFunction::operator() (double* x, double* par) {
     return TMath::Power(10,pol);
 }
 
-FullFunction::FullFunction(double mass_hypothesis, double window_size)
+ExpPol3FullFunction::ExpPol3FullFunction(double mass_hypothesis, double window_size)
     : mass_hypothesis_(mass_hypothesis), 
       window_size_(window_size) { 
 }
 
 
-double FullFunction::operator() (double* x, double* par) { 
+double ExpPol3FullFunction::operator() (double* x, double* par) { 
+    
+    double xp = (x[0] - mass_hypothesis_)/(window_size_*2.0); 
+  
+    // Chebyshevs between given limits
+    double t0 = par[0];
+    double t1 = par[1]*xp;
+    double t2 = par[2]*(2*xp*xp - 1);
+    double t3 = par[3]*(4*xp*xp*xp - 3*xp);
+  
+    double pol = t0+t1+t2+t3;
+
+    double gauss = (1.0)/(sqrt(2.0*TMath::Pi()*pow(par[6],2))) *
+        TMath::Exp( - pow((xp-par[5]),2)/(2.0*pow(par[6],2)) );
+  
+    return TMath::Power(10,pol)+0.0001*par[4]*gauss;
+}
+
+ExpPol5FullFunction::ExpPol5FullFunction(double mass_hypothesis, double window_size)
+    : mass_hypothesis_(mass_hypothesis), 
+      window_size_(window_size) { 
+}
+
+
+double ExpPol5FullFunction::operator() (double* x, double* par) { 
     
     double xp = (x[0] - mass_hypothesis_)/(window_size_*2.0); 
   
