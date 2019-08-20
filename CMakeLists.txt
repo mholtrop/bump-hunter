@@ -25,7 +25,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/modules")
 
 # Require the ROOT libraries.
-find_package(ROOT REQUIRED)
+find_package(ROOT REQUIRED RooFitCore RooFit)
 
 # Add the ROOT headers to the build
 include_directories(${ROOT_INCLUDE_DIRS})
